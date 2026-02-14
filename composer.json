@@ -1,0 +1,48 @@
+{
+    "name": "skywalker-labs/passwordless",
+    "description": "Seamless Passwordless Authentication for Laravel. Integrate OTP (One-Time Password) Login and 2FA into your default authentication flow with zero-conf middleware and ready-to-use UI.",
+    "keywords": [
+        "laravel",
+        "otp",
+        "authentication",
+        "login",
+        "2fa",
+        "security",
+        "skywalker",
+        "passwordless"
+    ],
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Skywalker Labs",
+            "email": "skywalkerlknw@gmail.com"
+        }
+    ],
+    "require": {
+        "ermradulsharma/laravel-toolkit": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Skywalker\\Otp\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Skywalker\\Otp\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Skywalker\\Otp\\OtpServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "require-dev": {
+        "orchestra/testbench": "^9.0",
+        "phpunit/phpunit": "^10.5"
+    }
+}

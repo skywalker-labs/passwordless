@@ -1,0 +1,16 @@
+/vendor
+.env
+.idea
+.vscode
+.phpunit.result.cache
+composer.lock
+/database/*.sqlite
+/database/*.sqlite-journal
+/node_modules
+/public/storage
+/storage/*.key
+/vendor
+.env.testing
+testbench.yaml
+phpunit.xml
+.DS_Store
