@@ -29,5 +29,12 @@ jobs:
       - name: Install dependencies
         run: composer update --no-interaction --no-progress --prefer-dist
 
+      - name: Debug environment
+        run: |
+          php -v
+          vendor/bin/phpunit --version
+          ls -la
+          cat phpunit.xml
+
       - name: Run test suite
-        run: vendor/bin/phpunit --display-errors --display-deprecations
+        run: php vendor/bin/phpunit
