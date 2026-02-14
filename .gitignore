@@ -12,5 +12,5 @@ composer.lock
 /vendor
 .env.testing
 testbench.yaml
-phpunit.xml
+
 .DS_Store
