@@ -7,6 +7,13 @@ use Illuminate\Support\Facades\Cache;
 
 class OtpTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->loadLaravelMigrations();
+        $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
+    }
+
     public function test_can_generate_otp()
     {
         $service = app('otp');

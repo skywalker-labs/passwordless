@@ -39,4 +39,15 @@ class TestCase extends Orchestra
     {
         // $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
     }
+
+    protected function defineRoutes($router)
+    {
+        $router->get('/login', function () {
+            return 'login';
+        })->name('login');
+
+        $router->post('/logout', function () {
+            return 'logout';
+        })->name('logout');
+    }
 }
