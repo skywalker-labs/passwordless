@@ -1,0 +1,11 @@
+workbench:
+  start: /
+  install: true
+  sync: []
+  build: []
+  assets: []
+
+env:
+  - DB_CONNECTION=sqlite
+  - DB_DATABASE=database/database.sqlite
+  - PASSWORDLESS_STORAGE_DRIVER=cache

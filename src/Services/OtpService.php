@@ -9,24 +9,32 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
+use Skywalker\Support\Support\Services\BaseService;
 use Skywalker\Support\Logging\Concerns\HasContext;
 
-class OtpService
+class OtpService extends BaseService
 {
     use HasContext;
 
-    protected $length;
-    protected $expiry;
-    protected $driver;
-    protected $channel;
-    protected $identifier;
+    protected int $length;
+    protected int $expiry;
+    protected string $driver;
+    protected string $channel;
+    protected ?string $identifier = null;
 
     public function __construct()
     {
-        $this->length = config('passwordless.length', 6);
-        $this->expiry = config('passwordless.expiry', 10);
-        $this->driver = config('passwordless.driver', 'cache');
-        $this->channel = config('passwordless.channel', 'log');
+        $length = config('passwordless.length', 6);
+        $this->length = is_int($length) ? $length : 6;
+
+        $expiry = config('passwordless.expiry', 10);
+        $this->expiry = is_int($expiry) ? $expiry : 10;
+
+        $driver = config('passwordless.driver', 'cache');
+        $this->driver = is_string($driver) ? $driver : 'cache';
+
+        $channel = config('passwordless.channel', 'log');
+        $this->channel = is_string($channel) ? $channel : 'log';
     }
 
     public function generate(string $identifier): string
@@ -49,7 +57,7 @@ class OtpService
                 ->where('expires_at', '>', Carbon::now())
                 ->first();
 
-            if ($record) {
+            if ($record instanceof \stdClass) {
                 DB::table('otps')->where('id', $record->id)->delete(); // One-time use
                 return true;
             }
@@ -91,7 +99,7 @@ class OtpService
      *
      * @param string $identifier
      * @param int $quantity
-     * @return array
+     * @return array<int, string>
      */
     public function generateBackupCodes(string $identifier, int $quantity = 8): array
     {
@@ -136,13 +144,13 @@ class OtpService
             ->whereNull('used_at')
             ->first();
 
-        if ($record) {
+        if ($record instanceof \stdClass) {
             DB::table('otp_backup_codes')
                 ->where('id', $record->id)
                 ->update(['used_at' => Carbon::now()]);
-            
+
             $this->logWithContext('info', "Backup code used for {$identifier}");
-            
+
             return true;
         }
 

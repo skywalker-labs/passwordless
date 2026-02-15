@@ -13,26 +13,30 @@ class OtpAuthController extends Controller
 {
     use ApiResponse;
 
-    protected $otpService;
+    protected OtpService $otpService;
 
     public function __construct(OtpService $otpService)
     {
         $this->otpService = $otpService;
     }
 
-    public function sendOtp(Request $request)
+    public function sendOtp(Request $request): \Illuminate\Http\JsonResponse
     {
         $request->validate([
             'identifier' => 'required|string', // validate email or phone
         ]);
 
-        $identifier = $request->input('identifier');
-        $userModel = config('auth.providers.users.model', \App\Models\User::class);
-        
+        $identifierInput = $request->input('identifier', '');
+        $identifier = is_string($identifierInput) ? $identifierInput : '';
+
+        $userModelConfig = config('auth.providers.users.model', 'App\\Models\\User');
+        /** @var class-string<\Illuminate\Database\Eloquent\Model> $userModel */
+        $userModel = is_string($userModelConfig) ? $userModelConfig : 'App\\Models\\User';
+
         // Check if user exists
         $user = $userModel::where('email', $identifier)
-                    ->orWhere('phone', $identifier) // Assuming phone column exists if using phone
-                    ->first();
+            ->orWhere('phone', $identifier) // Assuming phone column exists if using phone
+            ->first();
 
         if (!$user) {
             return response()->json(['message' => 'User not found.'], 404);
@@ -52,7 +56,7 @@ class OtpAuthController extends Controller
         RateLimiter::hit($key, 60); // 3 attempts per minute
 
         $otp = $this->otpService->generate($identifier);
-        
+
         // In sendOtp, we might want to actually send the OTP here, 
         // verify method in service does sending, but wait, `generate` calls `send`.
         // So this is fine.
@@ -61,19 +65,21 @@ class OtpAuthController extends Controller
         return $this->apiSuccess(null, 'OTP sent successfully.');
     }
 
-    public function showVerifyForm()
+    public function showVerifyForm(): \Illuminate\View\View
     {
-        return view('passwordless::otp-verify');
+        /** @var view-string $view */
+        $view = 'passwordless::otp-verify';
+        return view($view);
     }
 
-    public function verifyOtpSubmit(Request $request)
+    public function verifyOtpSubmit(Request $request): \Illuminate\Http\RedirectResponse
     {
         $request->validate([
             'otp' => 'required|string',
         ]);
 
         $user = Auth::user();
-        
+
         if (!$user) {
             return redirect()->route('login');
         }
@@ -87,13 +93,13 @@ class OtpAuthController extends Controller
         return back()->with('error', 'Invalid or expired OTP.');
     }
 
-    public function resendOtp(Request $request)
+    public function resendOtp(Request $request): \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
     {
         $user = Auth::user();
 
         if ($user && method_exists($user, 'sendOtp')) {
             $user->sendOtp();
-            
+
             if ($request->wantsJson()) {
                 return $this->apiSuccess(null, 'OTP Resent successfully.');
             }
@@ -106,15 +112,18 @@ class OtpAuthController extends Controller
         return back()->with('error', 'Unable to resend OTP.');
     }
 
-    public function verifyOtp(Request $request)
+    public function verifyOtp(Request $request): \Illuminate\Http\JsonResponse
     {
         $request->validate([
             'identifier' => 'required|string',
             'otp' => 'required|string',
         ]);
 
-        $identifier = $request->input('identifier');
-        $token = $request->input('otp');
+        $identifierInput = $request->input('identifier', '');
+        $identifier = is_string($identifierInput) ? $identifierInput : '';
+
+        $tokenInput = $request->input('otp', '');
+        $token = is_string($tokenInput) ? $tokenInput : '';
 
         $key = 'otp-verify:' . $identifier;
 
@@ -123,16 +132,18 @@ class OtpAuthController extends Controller
             return $this->apiError("Too many verification attempts. Please try again in {$seconds} seconds.", 429);
         }
 
-        $userModel = config('auth.providers.users.model', \App\Models\User::class);
+        $userModelConfig = config('auth.providers.users.model', 'App\\Models\\User');
+        /** @var class-string<\Illuminate\Database\Eloquent\Model> $userModel */
+        $userModel = is_string($userModelConfig) ? $userModelConfig : 'App\\Models\\User';
 
         if ($this->otpService->verify($identifier, $token)) {
             RateLimiter::clear($key); // Clear attempts on success
-            
-            $user = $userModel::where('email', $identifier)
-                        ->orWhere('phone', $identifier)
-                        ->first();
 
-            if ($user) {
+            $user = $userModel::where('email', $identifier)
+                ->orWhere('phone', $identifier)
+                ->first();
+
+            if ($user instanceof \Illuminate\Contracts\Auth\Authenticatable) {
                 Auth::login($user);
                 return $this->apiSuccess(['user' => $user], 'Logged in successfully.');
             }
@@ -143,20 +154,24 @@ class OtpAuthController extends Controller
         return $this->apiError('Invalid or expired OTP.', 401);
     }
 
-    public function loginMagic(Request $request)
+    public function loginMagic(Request $request): \Illuminate\Http\RedirectResponse
     {
         if (!$request->hasValidSignature()) {
             abort(401, 'Invalid or expired magic link.');
         }
 
-        $identifier = $request->identifier;
-        $userModel = config('auth.providers.users.model', \App\Models\User::class);
-        
-        $user = $userModel::where('email', $identifier)
-                    ->orWhere('phone', $identifier)
-                    ->first();
+        $identifierInput = $request->identifier ?? '';
+        $identifier = is_string($identifierInput) ? $identifierInput : '';
 
-        if ($user) {
+        $userModelConfig = config('auth.providers.users.model', 'App\\Models\\User');
+        /** @var class-string<\Illuminate\Database\Eloquent\Model> $userModel */
+        $userModel = is_string($userModelConfig) ? $userModelConfig : 'App\\Models\\User';
+
+        $user = $userModel::where('email', $identifier)
+            ->orWhere('phone', $identifier)
+            ->first();
+
+        if ($user instanceof \Illuminate\Contracts\Auth\Authenticatable) {
             Auth::login($user);
             $request->session()->put('otp_verified', true);
             return redirect()->intended('/');

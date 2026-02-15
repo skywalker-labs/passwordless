@@ -39,11 +39,15 @@
         }
     ],
     "require": {
-        "ermradulsharma/laravel-toolkit": "^1.0"
+        "skywalker-labs/toolkit": "^1.0"
     },
     "require-dev": {
         "orchestra/testbench": "^9.0",
-        "phpunit/phpunit": "^10.5"
+        "phpunit/phpunit": "^10.5",
+        "phpstan/phpstan": "*",
+        "larastan/larastan": "*",
+        "phpstan/phpstan-phpunit": "*",
+        "infection/infection": "*"
     },
     "autoload": {
         "psr-4": {

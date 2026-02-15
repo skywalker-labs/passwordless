@@ -4,16 +4,18 @@
 [![Total Downloads](https://img.shields.io/packagist/dt/skywalker-labs/passwordless.svg?style=flat-square)](https://packagist.org/packages/skywalker-labs/passwordless)
 [![License](https://img.shields.io/packagist/l/skywalker-labs/passwordless.svg?style=flat-square)](https://packagist.org/packages/skywalker-labs/passwordless)
 
-Seamless Passwordless Authentication for Laravel. Integrate OTP (One-Time Password) Login and 2FA into your default authentication flow with zero-conf middleware and ready-to-use UI.
+Seamless Passwordless Authentication for Laravel. Integrate OTP (One-Time Password) Login and 2FA into your default authentication flow with zero-conf middleware and ready-to-use UI. Built on top of [Skywalker Toolkit](https://github.com/skywalker-labs/toolkit).
 
 ## Features
 
 - **Automatic Integration**: Simply install the package and add the `HasOtp` trait to your User model.
 - **Middleware Protection**: Automatically intercepts authenticated users and redirects them to OTP verification.
-- **Session Based**: Works with standard Laravel Session authentication (Breeze, Jetstream, etc.).
-- **Multi-channel**: Supports Email and Log drivers (with hooks for SMS).
-- **Customizable**: Fully customizable views and configuration.
-- **Advanced Features**: Supports Magic Login Links and Backup Codes out of the box.
+- **Multi-channel Notifications**: Supports Email, Slack, SMS (Twilio), and Log channels out of the box.
+- **Flexible Storage**: Store OTPs in Cache or Database.
+- **Magic Login Links**: Secure, signed temporary links for one-click login.
+- **Backup Codes**: Emergency access codes for when the secondary device is unavailable.
+- **Premium UI**: Ready-to-use views for OTP verification.
+- **Rate Limiting**: Built-in protection against brute-force attacks.
 
 ## Installation
 
@@ -23,9 +25,13 @@ You can install the package via composer:
 composer require skywalker-labs/passwordless
 ```
 
+The package will automatically register its service provider.
+
 ## Setup
 
-1. Add the `HasOtp` trait to your `User` model:
+### 1. Prepare your User Model
+
+Add the `HasOtp` trait to your `User` model:
 
 ```php
 use Skywalker\Otp\Traits\HasOtp;
@@ -36,20 +42,51 @@ class User extends Authenticatable
 }
 ```
 
-2. (Optional) Publish the config file and views:
+### 2. Publish Assets
+
+Publish the configuration and migration files:
 
 ```bash
-php artisan vendor:publish --tag=otp-config
-php artisan vendor:publish --tag=otp-views
+php artisan vendor:publish --tag=passwordless-config
+php artisan vendor:publish --tag=passwordless-migrations
+```
+
+Run the migrations:
+
+```bash
+php artisan migrate
+```
+
+## Configuration
+
+The configuration file allows you to customize the OTP behavior:
+
+```php
+// config/passwordless.php
+
+return [
+    'length' => 6,
+    'expiry' => 10, // minutes
+    'driver' => 'cache', // cache or database
+    'channel' => 'mail', // mail, log, sms, slack
+    'services' => [
+        'twilio' => [ ... ],
+        'slack' => [ ... ],
+    ],
+];
 ```
 
 ## Usage
 
-Once the trait is added, any user log-in event will automatically trigger an OTP generation and redirect the user to the verification page if they access a protected route.
+### OTP Verification Flow
 
-### Protecting Routes
+Once a user logs in, the package automatically listens for the `Login` event and sends an OTP if the user has the `HasOtp` trait. The `otp.verified` middleware is automatically pushed to the `web` middleware group.
 
-The package automatically adds an `otp.verified` middleware alias. It is also pushed to the `web` group by default, but you can manually apply it to specific routes:
+Any route protected by the `web` (and optionally `auth`) middleware will redirect the user to `/otp/verify` if they haven't verified their OTP yet.
+
+### Protecting Specific Routes
+
+You can manually apply the `otp.verified` middleware to specific groups:
 
 ```php
 Route::middleware(['auth', 'otp.verified'])->group(function () {
@@ -59,28 +96,28 @@ Route::middleware(['auth', 'otp.verified'])->group(function () {
 });
 ```
 
-### Magic Links
+### Magic Login Links
 
-Generate a magic login link for a user:
+Generate a magic login link:
 
 ```php
 $link = app('otp')->generateMagicLink($user->email);
-// Send $link via email
+// Send this link to the user
 ```
 
 ### Backup Codes
 
-Generate backup codes for emergency access:
+Generate backup codes:
 
 ```php
 $codes = app('otp')->generateBackupCodes($user->email);
 ```
 
-Check a backup code:
+Verify a backup code:
 
 ```php
 if (app('otp')->verifyBackupCode($user->email, $request->code)) {
-    // Authenticate user...
+    // Verified!
 }
 ```
 

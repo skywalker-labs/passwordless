@@ -1,16 +1,37 @@
-/vendor
+# Essentials
 .env
-.idea
-.vscode
-.phpunit.result.cache
-composer.lock
-/database/*.sqlite
-/database/*.sqlite-journal
-/node_modules
-/public/storage
-/storage/*.key
+.env.backup
+.env.phpunit
 /vendor
-.env.testing
-testbench.yaml
+/node_modules
+composer.lock
+package-lock.json
+yarn.lock
 
+# Testing & Build
+/build
+/coverage
+.phpunit.result.cache
+.phpunit.cache
+
+# IDEs & Editors
+/.idea
+/.vscode
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project
+
+# System
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-error.log*

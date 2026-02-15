@@ -7,8 +7,8 @@ use Skywalker\Otp\Services\OtpService;
 
 class ValidOtp implements Rule
 {
-    protected $identifier;
-    protected $otpService;
+    protected string $identifier;
+    protected OtpService $otpService;
 
     /**
      * Create a new rule instance.
@@ -35,7 +35,8 @@ class ValidOtp implements Rule
             return false;
         }
 
-        return $this->otpService->verify($this->identifier, $value);
+        $otpValue = is_string($value) ? $value : (is_numeric($value) ? (string) $value : '');
+        return $this->otpService->verify($this->identifier, $otpValue);
     }
 
     /**

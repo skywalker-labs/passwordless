@@ -28,7 +28,7 @@ class CleanExpiredOtps extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
         $driver = config('passwordless.driver');
 
@@ -42,7 +42,7 @@ class CleanExpiredOtps extends Command
             ->delete();
 
         $this->info("Deleted {$count} expired OTPs.");
-        
+
         $this->logWithContext('info', "Cleaned expired OTPs", ['count' => $count]);
 
         return 0;

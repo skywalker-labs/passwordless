@@ -24,17 +24,33 @@ class TwilioChannel
         $message = $notification->toSms($notifiable);
         
         // Get phone number from notifiable
-        // Assuming notifiable has phone_number or routeNotificationFor('sms')
-        $to = $notifiable->routeNotificationFor('sms') ?? $notifiable->phone ?? null;
+        /** @var string|null $to */
+        $to = null;
+
+        if (is_object($notifiable) || is_string($notifiable)) {
+            /** @phpstan-ignore-next-line */
+            $routeTo = $notifiable->routeNotificationFor('sms');
+            $to = is_string($routeTo) ? $routeTo : null;
+
+            if (!$to && is_object($notifiable) && property_exists($notifiable, 'phone')) {
+                $phone = $notifiable->phone;
+                $to = is_string($phone) ? $phone : null;
+            }
+        }
 
         if (!$to) {
             Log::error('TwilioChannel: No phone number found for notifiable.');
             return;
         }
 
-        $sid = config('passwordless.services.twilio.sid');
-        $token = config('passwordless.services.twilio.token');
-        $from = config('passwordless.services.twilio.from');
+        $sidConfig = config('passwordless.services.twilio.sid');
+        $sid = is_string($sidConfig) ? $sidConfig : '';
+
+        $tokenConfig = config('passwordless.services.twilio.token');
+        $token = is_string($tokenConfig) ? $tokenConfig : '';
+
+        $fromConfig = config('passwordless.services.twilio.from');
+        $from = is_string($fromConfig) ? $fromConfig : '';
 
         if (!$sid || !$token || !$from) {
             Log::error('TwilioChannel: Missing Configuration.');

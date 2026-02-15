@@ -22,7 +22,7 @@ class EnsureOtpVerified
             $user = Auth::user();
 
             // If user does not have OTP capability, skip
-            if (!method_exists($user, 'sendOtp')) {
+            if ($user === null || !method_exists($user, 'sendOtp')) {
                 return $next($request);
             }
 
