@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Skywalker\Otp\Notifications\Channels;
 
 use Illuminate\Notifications\Notification;
@@ -15,7 +17,7 @@ class TwilioChannel
      * @param  \Illuminate\Notifications\Notification  $notification
      * @return void
      */
-    public function send($notifiable, Notification $notification)
+    public function send(mixed $notifiable, Notification $notification): void
     {
         if (!method_exists($notification, 'toSms')) {
             return;

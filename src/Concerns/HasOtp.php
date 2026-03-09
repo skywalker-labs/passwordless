@@ -1,20 +1,29 @@
 <?php
 
-namespace Skywalker\Otp\Traits;
+declare(strict_types=1);
 
-use Skywalker\Otp\Services\OtpService;
+namespace Skywalker\Otp\Concerns;
+
+use Skywalker\Otp\Domain\Contracts\OtpService as OtpServiceContract;
 use Illuminate\Support\Facades\App;
 
+/**
+ * @property string $email
+ * @property string|null $phone
+ */
 trait HasOtp
 {
     /**
      * Send an OTP to the user.
      *
      * @return string
+     * @throws \Exception
      */
     public function sendOtp()
     {
-        $service = app('otp');
+        /** @var OtpServiceContract $service */
+        $service = app(OtpServiceContract::class);
+        
         // Determine identifier (email or phone)
         $identifier = $this->email ?? $this->phone; 
         
@@ -34,8 +43,14 @@ trait HasOtp
      */
     public function verifyOtp(string $token)
     {
-        $service = app('otp');
+        /** @var OtpServiceContract $service */
+        $service = app(OtpServiceContract::class);
+
         $identifier = $this->email ?? $this->phone;
+
+        if (!$identifier) {
+            throw new \Exception("User must have an email or phone to verify OTP.");
+        }
 
         return $service->verify($identifier, $token);
     }

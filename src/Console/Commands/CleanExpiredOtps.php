@@ -1,15 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Skywalker\Otp\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
-use Skywalker\Support\Logging\Concerns\HasContext;
 
 class CleanExpiredOtps extends Command
 {
-    use HasContext;
 
     /**
      * The name and signature of the console command.
@@ -30,7 +31,8 @@ class CleanExpiredOtps extends Command
      */
     public function handle(): int
     {
-        $driver = config('passwordless.driver');
+        $driver = config('passwordless.driver', 'cache');
+        $driver = is_string($driver) ? $driver : 'cache';
 
         if ($driver !== 'database') {
             $this->error('OTP driver is not set to database. Cleaning skipped.');
@@ -43,7 +45,7 @@ class CleanExpiredOtps extends Command
 
         $this->info("Deleted {$count} expired OTPs.");
 
-        $this->logWithContext('info', "Cleaned expired OTPs", ['count' => $count]);
+        Log::info("Cleaned expired OTPs", ['count' => $count]);
 
         return 0;
     }

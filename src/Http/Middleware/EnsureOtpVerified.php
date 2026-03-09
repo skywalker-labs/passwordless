@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Skywalker\Otp\Http\Middleware;
 
 use Closure;
@@ -15,7 +17,7 @@ class EnsureOtpVerified
      * @param  \Closure  $next
      * @return mixed
      */
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next): mixed
     {
         // Check if user is logged in
         if (Auth::check()) {

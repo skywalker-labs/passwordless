@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Skywalker\Otp\Http\Controllers;
 
 use Illuminate\Http\Request;

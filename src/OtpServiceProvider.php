@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Skywalker\Otp;
 
 use Skywalker\Support\Providers\PackageServiceProvider;
@@ -29,9 +31,25 @@ class OtpServiceProvider extends PackageServiceProvider
 
         $this->registerConfig();
 
-        $this->app->singleton('otp', function ($app) {
-            return new \Skywalker\Otp\Services\OtpService();
+        $this->app->singleton(\Skywalker\Otp\Domain\Contracts\OtpStore::class, function ($app) {
+            $driver = config('passwordless.driver', 'cache');
+            return (is_string($driver) && $driver === 'database')
+                ? new \Skywalker\Otp\Infrastructure\Persistence\DatabaseOtpStore()
+                : new \Skywalker\Otp\Infrastructure\Persistence\CacheOtpStore();
         });
+
+        $this->app->singleton(\Skywalker\Otp\Domain\Contracts\OtpSender::class, function ($app) {
+            return new \Skywalker\Otp\Infrastructure\Delivery\NotificationSender();
+        });
+
+        $this->app->singleton(\Skywalker\Otp\Domain\Contracts\OtpService::class, function ($app) {
+            return new \Skywalker\Otp\Services\OtpService(
+                $app->make(\Skywalker\Otp\Domain\Contracts\OtpStore::class),
+                $app->make(\Skywalker\Otp\Domain\Contracts\OtpSender::class)
+            );
+        });
+
+        $this->app->alias(\Skywalker\Otp\Domain\Contracts\OtpService::class, 'otp');
 
         $this->registerCommands([
             \Skywalker\Otp\Console\Commands\CleanExpiredOtps::class,
@@ -64,7 +82,10 @@ class OtpServiceProvider extends PackageServiceProvider
         $this->loadMigrations();
 
         // Load routes with configured middleware
-        \Illuminate\Support\Facades\Route::middleware(config('passwordless.middleware', ['web']))
+        $middleware = config('passwordless.middleware', ['web']);
+        $middleware = is_array($middleware) ? $middleware : ['web'];
+
+        \Illuminate\Support\Facades\Route::middleware($middleware)
             ->group(function () {
                 $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
             });

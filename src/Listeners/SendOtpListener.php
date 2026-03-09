@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Skywalker\Otp\Listeners;
 
 use Illuminate\Auth\Events\Login;
 use Illuminate\Support\Facades\Session;
-use Skywalker\Otp\Traits\HasOtp;
+use Skywalker\Otp\Concerns\HasOtp;
 
 class SendOtpListener
 {
@@ -14,7 +16,7 @@ class SendOtpListener
      * @param  \Illuminate\Auth\Events\Login  $event
      * @return void
      */
-    public function handle(Login $event)
+    public function handle(Login $event): void
     {
         $user = $event->user;
 

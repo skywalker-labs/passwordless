@@ -1,25 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Skywalker\Otp\Rules;
 
 use Illuminate\Contracts\Validation\Rule;
-use Skywalker\Otp\Services\OtpService;
+use Skywalker\Otp\Domain\Contracts\OtpService as OtpServiceContract;
 
 class ValidOtp implements Rule
 {
     protected string $identifier;
-    protected OtpService $otpService;
+    protected OtpServiceContract $otpService;
 
     /**
      * Create a new rule instance.
      *
      * @param  string  $identifier
-     * @return void
      */
-    public function __construct($identifier)
+    public function __construct(string $identifier)
     {
         $this->identifier = $identifier;
-        $this->otpService = app('otp');
+        
+        /** @var OtpServiceContract $service */
+        $service = app(OtpServiceContract::class);
+        $this->otpService = $service;
     }
 
     /**

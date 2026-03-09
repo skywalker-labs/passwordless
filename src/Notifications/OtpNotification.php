@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Skywalker\Otp\Notifications;
 
 use Illuminate\Bus\Queueable;
@@ -13,8 +15,9 @@ class OtpNotification extends Notification implements ShouldQueue
     use Queueable;
 
     protected string $otp;
+
     /** @var array<int, string>|string|null */
-    protected $channels;
+    protected array|string|null $channels;
 
     /**
      * Create a new notification instance.
@@ -22,7 +25,7 @@ class OtpNotification extends Notification implements ShouldQueue
      * @param string $otp
      * @param array<int, string>|string|null $channels
      */
-    public function __construct(string $otp, $channels = null)
+    public function __construct(string $otp, array|string|null $channels = null)
     {
         $this->otp = $otp;
         $this->channels = $channels;
@@ -34,7 +37,7 @@ class OtpNotification extends Notification implements ShouldQueue
      * @param  mixed  $notifiable
      * @return array<int, string>
      */
-    public function via($notifiable): array
+    public function via(mixed $notifiable): array
     {
         // If channels passed explicitly, use them
         if ($this->channels) {
@@ -71,7 +74,7 @@ class OtpNotification extends Notification implements ShouldQueue
      * @param  mixed  $notifiable
      * @return \Illuminate\Notifications\Messages\MailMessage
      */
-    public function toMail($notifiable)
+    public function toMail(mixed $notifiable): MailMessage
     {
         $expiryConfig = config('passwordless.expiry', '10');
         $expiry = is_string($expiryConfig) ? $expiryConfig : (is_int($expiryConfig) ? (string) $expiryConfig : '10');
@@ -105,7 +108,7 @@ class OtpNotification extends Notification implements ShouldQueue
      * @param  mixed  $notifiable
      * @return string
      */
-    public function toSms($notifiable)
+    public function toSms(mixed $notifiable): string
     {
         return "Your OTP code is: {$this->otp}";
     }

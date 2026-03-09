@@ -27,9 +27,10 @@ class OtpTest extends TestCase
         $this->assertNotNull($otp);
         $this->assertEquals(6, strlen($otp));
         
-        $storedValue = Cache::get('otp_test@example.com');
-        $this->assertNotEquals($otp, $storedValue);
-        $this->assertTrue(Hash::check($otp, $storedValue));
+        /** @var \Skywalker\Otp\Domain\ValueObjects\OtpToken $storedToken */
+        $storedToken = Cache::get('otp_test@example.com');
+        $this->assertInstanceOf(\Skywalker\Otp\Domain\ValueObjects\OtpToken::class, $storedToken);
+        $this->assertTrue(Hash::check($otp, $storedToken->hashedToken));
     }
 
     public function test_can_verify_otp()

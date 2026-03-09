@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Skywalker\Otp\Notifications\Channels;
 
 use Illuminate\Notifications\Notification;
@@ -14,7 +16,7 @@ class LogChannel
      * @param  \Illuminate\Notifications\Notification  $notification
      * @return void
      */
-    public function send($notifiable, Notification $notification)
+    public function send(mixed $notifiable, Notification $notification): void
     {
         $message = 'Notification: ';
         if (method_exists($notification, 'toSms')) {

@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Skywalker\Otp\Exceptions;
 
-use Exception;
+use Skywalker\Support\Exceptions\PackageException;
 
-class OtpException extends Exception
+class OtpException extends PackageException
 {
 }
