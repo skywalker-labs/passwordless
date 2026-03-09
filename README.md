@@ -5,6 +5,7 @@
 [![PHPStan Level 9](https://img.shields.io/badge/PHPStan-Level%209-brightgreen.svg?style=flat-square)](https://phpstan.org)
 [![PHP Version](https://img.shields.io/badge/php-%3E%3D8.2-blue.svg?style=flat-square)](https://www.php.net/)
 [![License](https://img.shields.io/packagist/l/skywalker-labs/passwordless.svg?style=flat-square)](LICENSE.md)
+[![Security Policy](https://img.shields.io/badge/security-policy-brightgreen.svg?style=flat-square)](SECURITY.md)
 
 Elegant **passwordless authentication** for Laravel. Drop-in OTP login, 2FA enforcement, magic links, and backup codes — all built on [Skywalker Toolkit](https://github.com/skywalker-labs/toolkit) with action-oriented architecture, contract-based design, and **PHPStan Level 9** compliance.
 
@@ -241,6 +242,9 @@ composer test
 
 # Static analysis (PHPStan Level 9)
 composer analyse
+
+# Mutation testing (Infection)
+vendor/bin/infection
 
 # Format code (Laravel Pint / PSR-12)
 composer format

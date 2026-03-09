@@ -31,3 +31,6 @@ jobs:
 
       - name: Run test suite
         run: php vendor/bin/phpunit --display-errors --display-deprecations
+
+      - name: Run mutation testing
+        run: vendor/bin/infection --min-msi=10 --min-covered-msi=10 --threads=max --no-progress
