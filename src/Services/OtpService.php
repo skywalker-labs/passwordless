@@ -4,22 +4,12 @@ declare(strict_types=1);
 
 namespace Skywalker\Otp\Services;
 
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
-use Carbon\Carbon;
-
 use Skywalker\Otp\Domain\Contracts\OtpService as OtpServiceContract;
 use Skywalker\Otp\Exceptions\InvalidOtpException;
-use Skywalker\Otp\Exceptions\OtpDeliveryFailedException;
 use Skywalker\Support\Services\BaseService;
 
 use Skywalker\Otp\Domain\Contracts\OtpStore;
 use Skywalker\Otp\Domain\Contracts\OtpSender;
-use Skywalker\Otp\Domain\ValueObjects\OtpToken;
 
 use Skywalker\Otp\Actions\GenerateOtp;
 use Skywalker\Otp\Actions\VerifyOtp;

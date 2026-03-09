@@ -7,7 +7,7 @@ namespace Skywalker\Otp\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
-use Skywalker\Otp\Services\OtpService;
+use Skywalker\Otp\Domain\Contracts\OtpService as OtpServiceContract;
 use Illuminate\Support\Facades\RateLimiter;
 use Skywalker\Otp\Events\OtpVerified;
 use Skywalker\Support\Http\Concerns\ApiResponse;
@@ -16,9 +16,9 @@ class OtpAuthController extends Controller
 {
     use ApiResponse;
 
-    protected OtpService $otpService;
+    protected OtpServiceContract $otpService;
 
-    public function __construct(OtpService $otpService)
+    public function __construct(OtpServiceContract $otpService)
     {
         $this->otpService = $otpService;
     }

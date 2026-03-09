@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Skywalker\Otp\Concerns;
 
 use Skywalker\Otp\Domain\Contracts\OtpService as OtpServiceContract;
-use Illuminate\Support\Facades\App;
+use Skywalker\Otp\Exceptions\InvalidOtpException;
 
 /**
  * @property string $email
@@ -16,19 +16,19 @@ trait HasOtp
     /**
      * Send an OTP to the user.
      *
-     * @return string
-     * @throws \Exception
+     * @return string The generated OTP.
+     * @throws \RuntimeException
      */
-    public function sendOtp()
+    public function sendOtp(): string
     {
         /** @var OtpServiceContract $service */
         $service = app(OtpServiceContract::class);
-        
+
         // Determine identifier (email or phone)
-        $identifier = $this->email ?? $this->phone; 
-        
+        $identifier = $this->email ?? $this->phone;
+
         if (!$identifier) {
-             throw new \Exception("User must have an email or phone to receive OTP.");
+            throw new \RuntimeException('User must have an email or phone to receive OTP.');
         }
 
         return $service->generate($identifier);
@@ -39,9 +39,9 @@ trait HasOtp
      *
      * @param string $token
      * @return bool
-     * @throws \Skywalker\Otp\Exceptions\InvalidOtpException
+     * @throws InvalidOtpException
      */
-    public function verifyOtp(string $token)
+    public function verifyOtp(string $token): bool
     {
         /** @var OtpServiceContract $service */
         $service = app(OtpServiceContract::class);
@@ -49,7 +49,7 @@ trait HasOtp
         $identifier = $this->email ?? $this->phone;
 
         if (!$identifier) {
-            throw new \Exception("User must have an email or phone to verify OTP.");
+            throw new \RuntimeException('User must have an email or phone to verify OTP.');
         }
 
         return $service->verify($identifier, $token);

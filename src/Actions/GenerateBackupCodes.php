@@ -6,6 +6,7 @@ namespace Skywalker\Otp\Actions;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Skywalker\Support\Actions\Action;
 
@@ -18,7 +19,7 @@ class GenerateBackupCodes extends Action
     public function execute(...$args): array
     {
         $identifier = $args[0] ?? throw new \InvalidArgumentException('Identifier is required.');
-        $quantity = $args[1] ?? 8;
+        $quantity   = $args[1] ?? 8;
 
         assert(is_string($identifier));
         assert(is_int($quantity));
@@ -29,14 +30,14 @@ class GenerateBackupCodes extends Action
         $codes = [];
         /** @var array<int, array<string, mixed>> $data */
         $data = [];
-        $now = Carbon::now();
+        $now  = Carbon::now();
 
         for ($i = 0; $i < $quantity; $i++) {
-            $code = Str::random(10);
+            $code   = Str::random(10);
             $codes[] = $code;
-            $data[] = [
+            $data[]  = [
                 'identifier' => $identifier,
-                'code' => $code, // Should ideally be hashed, but keeping parity for now
+                'code'       => Hash::make($code), // Hashed for security
                 'created_at' => $now,
                 'updated_at' => $now,
             ];

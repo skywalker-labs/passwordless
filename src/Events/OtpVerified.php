@@ -15,28 +15,10 @@ class OtpVerified
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     /**
-     * The verified user.
-     *
-     * @var Authenticatable
-     */
-    public $user;
-
-    /**
-     * The current request.
-     *
-     * @var Request
-     */
-    public $request;
-
-    /**
      * Create a new event instance.
-     *
-     * @param Authenticatable $user
-     * @param Request $request
      */
-    public function __construct(Authenticatable $user, Request $request)
-    {
-        $this->user = $user;
-        $this->request = $request;
-    }
+    public function __construct(
+        public readonly Authenticatable $user,
+        public readonly Request $request
+    ) {}
 }

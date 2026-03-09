@@ -18,9 +18,9 @@ class OtpToken extends ValueObject
      * @param Carbon $expiresAt
      */
     public function __construct(
-        public string $identifier,
-        public string $hashedToken,
-        public Carbon $expiresAt
+        public readonly string $identifier,
+        public readonly string $hashedToken,
+        public readonly Carbon $expiresAt
     ) {
     }
 
