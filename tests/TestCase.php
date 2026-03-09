@@ -25,6 +25,7 @@ class TestCase extends Orchestra
         ]);
         
         $app['config']->set('passwordless.driver', 'cache'); // Default
+        $app['config']->set('auth.providers.users.model', \Skywalker\Otp\Tests\Models\User::class);
     }
 
     protected function setUp(): void

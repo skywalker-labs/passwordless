@@ -30,6 +30,7 @@ trait HasOtp
      *
      * @param string $token
      * @return bool
+     * @throws \Skywalker\Otp\Exceptions\InvalidOtpException
      */
     public function verifyOtp(string $token)
     {

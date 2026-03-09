@@ -7,6 +7,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Skywalker\Otp\Services\OtpService;
 use Illuminate\Support\Facades\RateLimiter;
+use Skywalker\Otp\Events\OtpVerified;
 use Skywalker\Support\Http\Concerns\ApiResponse;
 
 class OtpAuthController extends Controller
@@ -55,14 +56,12 @@ class OtpAuthController extends Controller
 
         RateLimiter::hit($key, 60); // 3 attempts per minute
 
-        $otp = $this->otpService->generate($identifier);
-
-        // In sendOtp, we might want to actually send the OTP here, 
-        // verify method in service does sending, but wait, `generate` calls `send`.
-        // So this is fine.
-
-        // Return 200 OK
-        return $this->apiSuccess(null, 'OTP sent successfully.');
+        try {
+            $otp = $this->otpService->generate($identifier);
+            return $this->apiSuccess(null, 'OTP sent successfully.');
+        } catch (\Skywalker\Otp\Exceptions\OtpDeliveryFailedException $e) {
+            return $this->apiError($e->getMessage(), 500);
+        }
     }
 
     public function showVerifyForm(): \Illuminate\View\View
@@ -136,20 +135,23 @@ class OtpAuthController extends Controller
         /** @var class-string<\Illuminate\Database\Eloquent\Model> $userModel */
         $userModel = is_string($userModelConfig) ? $userModelConfig : 'App\\Models\\User';
 
-        if ($this->otpService->verify($identifier, $token)) {
-            RateLimiter::clear($key); // Clear attempts on success
+        try {
+            if ($this->otpService->verify($identifier, $token)) {
+                RateLimiter::clear($key); // Clear attempts on success
 
-            $user = $userModel::where('email', $identifier)
-                ->orWhere('phone', $identifier)
-                ->first();
+                $user = $userModel::where('email', $identifier)
+                    ->orWhere('phone', $identifier)
+                    ->first();
 
-            if ($user instanceof \Illuminate\Contracts\Auth\Authenticatable) {
-                Auth::login($user);
-                return $this->apiSuccess(['user' => $user], 'Logged in successfully.');
+                if ($user instanceof \Illuminate\Contracts\Auth\Authenticatable) {
+                    event(new OtpVerified($user, $request));
+                    return $this->apiSuccess(['user' => $user], 'OTP verified successfully.');
+                }
             }
+        } catch (\Skywalker\Otp\Exceptions\InvalidOtpException $e) {
+            RateLimiter::hit($key, 60); // 5 attempts per minute
+            return $this->apiError($e->getMessage(), 401);
         }
-
-        RateLimiter::hit($key, 60); // 5 attempts per minute
 
         return $this->apiError('Invalid or expired OTP.', 401);
     }
@@ -172,7 +174,7 @@ class OtpAuthController extends Controller
             ->first();
 
         if ($user instanceof \Illuminate\Contracts\Auth\Authenticatable) {
-            Auth::login($user);
+            event(new OtpVerified($user, $request));
             $request->session()->put('otp_verified', true);
             return redirect()->intended('/');
         }

@@ -6,9 +6,12 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
+use Skywalker\Otp\Exceptions\InvalidOtpException;
+use Skywalker\Otp\Exceptions\OtpDeliveryFailedException;
 use Skywalker\Support\Support\Services\BaseService;
 use Skywalker\Support\Logging\Concerns\HasContext;
 
@@ -21,6 +24,13 @@ class OtpService extends BaseService
     protected string $driver;
     protected string $channel;
     protected ?string $identifier = null;
+
+    /**
+     * Custom OTP generator callback.
+     *
+     * @var (\Closure(): string)|null
+     */
+    protected static $generator = null;
 
     public function __construct()
     {
@@ -48,49 +58,74 @@ class OtpService extends BaseService
         return $otp;
     }
 
+    /**
+     * Set a custom OTP generator.
+     *
+     * @param (\Closure(): string) $callback
+     * @return void
+     */
+    public static function useGenerator(\Closure $callback): void
+    {
+        static::$generator = $callback;
+    }
+
+    /**
+     * Verify the OTP token.
+     *
+     * @param string $identifier
+     * @param string $token
+     * @return bool
+     * @throws InvalidOtpException
+     */
     public function verify(string $identifier, string $token): bool
     {
         if ($this->driver === 'database') {
             $record = DB::table('otps')
                 ->where('identifier', $identifier)
-                ->where('token', $token)
                 ->where('expires_at', '>', Carbon::now())
                 ->first();
 
-            if ($record instanceof \stdClass) {
+            if ($record instanceof \stdClass && Hash::check($token, $record->token)) {
                 DB::table('otps')->where('id', $record->id)->delete(); // One-time use
                 return true;
             }
         } else {
             $key = 'otp_' . $identifier;
-            if (Cache::get($key) === $token) {
+            $hashedToken = Cache::get($key);
+            if ($hashedToken && Hash::check($token, $hashedToken)) {
                 Cache::forget($key);
                 return true;
             }
         }
 
-        return false;
+        throw new InvalidOtpException("Invalid or expired OTP.");
     }
 
     protected function generateToken(): string
     {
+        if (static::$generator) {
+            return (string) call_user_func(static::$generator);
+        }
+
         return (string) random_int(pow(10, $this->length - 1), pow(10, $this->length) - 1);
     }
 
     protected function store(string $identifier, string $token): void
     {
+        $hashedToken = Hash::make($token);
+
         if ($this->driver === 'database') {
             DB::table('otps')->updateOrInsert(
                 ['identifier' => $identifier],
                 [
-                    'token' => $token,
+                    'token' => $hashedToken,
                     'expires_at' => Carbon::now()->addMinutes($this->expiry),
                     'created_at' => Carbon::now(),
                     'updated_at' => Carbon::now(),
                 ]
             );
         } else {
-            Cache::put('otp_' . $identifier, $token, Carbon::now()->addMinutes($this->expiry));
+            Cache::put('otp_' . $identifier, $hashedToken, Carbon::now()->addMinutes($this->expiry));
         }
     }
 
@@ -172,18 +207,30 @@ class OtpService extends BaseService
         );
     }
 
+    /**
+     * Send the OTP token via the configured channel.
+     *
+     * @param string $identifier
+     * @param string $token
+     * @return void
+     * @throws OtpDeliveryFailedException
+     */
     protected function send(string $identifier, string $token): void
     {
-        if ($this->channel === 'log') {
-            $this->logWithContext('info', "OTP for {$identifier}: {$token}", ['identifier' => $identifier]);
-            return;
+        try {
+            if ($this->channel === 'log') {
+                $this->logWithContext('info', "OTP for {$identifier}: {$token}", ['identifier' => $identifier]);
+                return;
+            }
+
+            $routeKey = 'mail';
+            if ($this->channel === 'sms') $routeKey = 'sms';
+            if ($this->channel === 'slack') $routeKey = 'slack';
+
+            \Illuminate\Support\Facades\Notification::route($routeKey, $identifier)
+                ->notify(new \Skywalker\Otp\Notifications\OtpNotification($token));
+        } catch (\Exception $e) {
+            throw new OtpDeliveryFailedException("Failed to send OTP: {$e->getMessage()}", 0, $e);
         }
-
-        $routeKey = 'mail';
-        if ($this->channel === 'sms') $routeKey = 'sms';
-        if ($this->channel === 'slack') $routeKey = 'slack';
-
-        \Illuminate\Support\Facades\Notification::route($routeKey, $identifier)
-            ->notify(new \Skywalker\Otp\Notifications\OtpNotification($token));
     }
 }

@@ -60,4 +60,14 @@ return [
             'webhook_url' => env('SLACK_WEBHOOK_URL'),
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Default Middleware
+    |--------------------------------------------------------------------------
+    |
+    | Middleware applied to the package routes by default.
+    |
+    */
+    'middleware' => ['web', 'throttle:6,1'],
 ];

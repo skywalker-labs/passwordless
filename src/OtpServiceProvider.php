@@ -63,8 +63,11 @@ class OtpServiceProvider extends PackageServiceProvider
         $this->loadViews();
         $this->loadMigrations();
 
-        // Load routes manually as PackageServiceProvider doesn't enforce route structure
-        $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
+        // Load routes with configured middleware
+        \Illuminate\Support\Facades\Route::middleware(config('passwordless.middleware', ['web']))
+            ->group(function () {
+                $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
+            });
     }
 
     /**
