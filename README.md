@@ -1,12 +1,12 @@
 # Skywalker Passwordless — OTP & Magic Link Authentication
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/skywalker-labs/passwordless.svg?style=flat-square)](https://packagist.org/packages/skywalker-labs/passwordless)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/skywalker-labs/passwordless.svg?style=for-the-badge)](https://packagist.org/packages/skywalker-labs/passwordless)
 ![Version](https://img.shields.io/github/v/release/skywalker-labs/passwordless?style=for-the-badge)
-[![Total Downloads](https://img.shields.io/packagist/dt/skywalker-labs/passwordless.svg?style=flat-square)](https://packagist.org/packages/skywalker-labs/passwordless)
-[![PHPStan Level 9](https://img.shields.io/badge/PHPStan-Level%209-brightgreen.svg?style=flat-square)](https://phpstan.org)
-[![PHP Version](https://img.shields.io/badge/php-%3E%3D8.2-blue.svg?style=flat-square)](https://www.php.net/)
-[![License](https://img.shields.io/packagist/l/skywalker-labs/passwordless.svg?style=flat-square)](LICENSE.md)
-[![Security Policy](https://img.shields.io/badge/security-policy-brightgreen.svg?style=flat-square)](SECURITY.md)
+[![Total Downloads](https://img.shields.io/packagist/dt/skywalker-labs/passwordless.svg?style=for-the-badge)](https://packagist.org/packages/skywalker-labs/passwordless)
+[![PHPStan Level 9](https://img.shields.io/badge/PHPStan-Level%209-brightgreen.svg?style=for-the-badge)](https://phpstan.org)
+[![PHP Version](https://img.shields.io/badge/php-%3E%3D8.2-blue.svg?style=for-the-badge)](https://www.php.net/)
+[![License](https://img.shields.io/packagist/l/skywalker-labs/passwordless.svg?style=for-the-badge)](LICENSE.md)
+[![Security Policy](https://img.shields.io/badge/security-policy-brightgreen.svg?style=for-the-badge)](SECURITY.md)
 
 Elegant **passwordless authentication** for Laravel. Drop-in OTP login, 2FA enforcement, magic links, and backup codes — all built on [Skywalker Toolkit](https://github.com/skywalker-labs/toolkit) with action-oriented architecture, contract-based design, and **Extreme Strictness (PHPStan Level 9 + Strict Rules)** compliance.
 
