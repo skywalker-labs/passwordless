@@ -24,7 +24,7 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           extensions: mbstring, json, iconv, sqlite3, curl, libxml, dom
-          coverage: none
+          coverage: pcov
 
       - name: Install dependencies
         run: composer update --no-interaction --no-progress --prefer-dist
