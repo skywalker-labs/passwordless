@@ -10,8 +10,8 @@ Contributions are welcome and will be fully credited. Please read this guide bef
 2. **Write tests** for any new functionality or bug fix.
 3. **Update documentation** if you change any public API.
 4. **Ensure the full test suite passes** before submitting.
-5. **Ensure PHPStan Level 9 passes** with zero errors.
-6. **Format your code** with Laravel Pint before submitting.
+5. **Ensure Extreme Strictness passes** (PHPStan Level 9 + Strict Rules) with zero errors.
+6. **Format your code** with Laravel Pint (using the project's config) before submitting.
 7. **Open the pull request** with a clear description of what changed and why.
 
 ---
@@ -31,16 +31,17 @@ composer format
 
 ---
 
-## 🏗️ Architecture Guidelines
+Architecture Guidelines
 
 This package follows a strict **Action-Oriented + Domain-Driven** architecture:
 
-- **One Action class per use case** — each extending `Skywalker\Support\Actions\Action`.
+- **One Action class per use case** — each extending `Skywalker\Support\Foundation\Action`.
 - **No business logic in the controller** — the controller is a thin HTTP adapter only.
 - **No business logic in the service** — `OtpService` is a thin orchestrator that delegates to Actions.
 - **Interfaces over concretions** — always inject `OtpStore`, `OtpSender`, `OtpService` contracts, not concrete classes.
 - **Value Objects are immutable** — all `OtpToken` properties must be `readonly`.
 - **Events for side-effects** — use `OtpGenerated`, `OtpVerified`, `OtpFailed` instead of coupling logic to the action.
+- **Strict Logic** — avoid implicit boolean/truthiness checks; use explicit `=== null` or `=== true`.
 
 ---
 
@@ -56,8 +57,8 @@ This package follows a strict **Action-Oriented + Domain-Driven** architecture:
 ## 🧩 Adding a New Feature
 
 1. **Define a contract** in `src/Domain/Contracts/` if the feature is extensible.
-2. **Create an Action** in `src/Actions/` — extend `Skywalker\Support\Actions\Action` and implement `execute(...$args)`.
-3. **Add a method** to `OtpService` that delegates to the new Action.
+2. **Create an Action** in `src/Actions/` — extend `Skywalker\Support\Foundation\Action` and implement the variadic `execute(...$args)` method.
+3. **Add a method** to `OtpService` that delegates to the new Action using positional arguments.
 4. **Dispatch an event** for the happy path and error path (if applicable).
 5. **Write a feature test** in `tests/Feature/`.
 6. **Update `README.md`** and **`CHANGELOG.md`** with the new feature.

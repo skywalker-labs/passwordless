@@ -18,14 +18,14 @@ class OtpServiceProvider extends PackageServiceProvider
     /**
      * Package name.
      *
-     * @var string
+     * @var string|null
      */
     protected $package = 'passwordless';
 
     /**
      * Register services.
      */
-    public function register()
+    public function register(): void
     {
         parent::register();
 
@@ -33,13 +33,14 @@ class OtpServiceProvider extends PackageServiceProvider
 
         $this->app->singleton(\Skywalker\Otp\Domain\Contracts\OtpStore::class, function ($app) {
             $driver = config('passwordless.driver', 'cache');
+
             return (is_string($driver) && $driver === 'database')
-                ? new \Skywalker\Otp\Infrastructure\Persistence\DatabaseOtpStore()
-                : new \Skywalker\Otp\Infrastructure\Persistence\CacheOtpStore();
+                ? new \Skywalker\Otp\Infrastructure\Persistence\DatabaseOtpStore
+                : new \Skywalker\Otp\Infrastructure\Persistence\CacheOtpStore;
         });
 
         $this->app->singleton(\Skywalker\Otp\Domain\Contracts\OtpSender::class, function ($app) {
-            return new \Skywalker\Otp\Infrastructure\Delivery\NotificationSender();
+            return new \Skywalker\Otp\Infrastructure\Delivery\NotificationSender;
         });
 
         $this->app->singleton(\Skywalker\Otp\Domain\Contracts\OtpService::class, function ($app) {
@@ -87,17 +88,15 @@ class OtpServiceProvider extends PackageServiceProvider
 
         \Illuminate\Support\Facades\Route::middleware($middleware)
             ->group(function () {
-                $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
+                $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
             });
     }
 
     /**
      * Get the base views path.
-     *
-     * @return string
      */
     protected function getViewsPath(): string
     {
-        return $this->getBasePath() . DIRECTORY_SEPARATOR . 'resources' . DIRECTORY_SEPARATOR . 'views';
+        return $this->getBasePath().DIRECTORY_SEPARATOR.'resources'.DIRECTORY_SEPARATOR.'views';
     }
 }

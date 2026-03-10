@@ -6,6 +6,4 @@ namespace Skywalker\Otp\Exceptions;
 
 use Skywalker\Support\Exceptions\PackageException;
 
-class OtpException extends PackageException
-{
-}
+class OtpException extends PackageException {}

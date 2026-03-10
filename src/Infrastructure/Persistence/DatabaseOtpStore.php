@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Skywalker\Otp\Infrastructure\Persistence;
 
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Skywalker\Otp\Domain\Contracts\OtpStore;
 use Skywalker\Otp\Domain\ValueObjects\OtpToken;
-use Carbon\Carbon;
 
 class DatabaseOtpStore implements OtpStore
 {
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function store(OtpToken $token): void
     {
@@ -28,7 +28,7 @@ class DatabaseOtpStore implements OtpStore
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function get(string $identifier): ?OtpToken
     {
@@ -37,7 +37,7 @@ class DatabaseOtpStore implements OtpStore
             ->where('identifier', $identifier)
             ->first();
 
-        if (!$record) {
+        if ($record === null) {
             return null;
         }
 
@@ -49,7 +49,7 @@ class DatabaseOtpStore implements OtpStore
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function delete(string $identifier): void
     {

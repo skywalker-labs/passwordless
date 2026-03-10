@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace Skywalker\Otp\Actions;
 
-use Illuminate\Support\Facades\URL;
 use Carbon\Carbon;
-use Skywalker\Support\Actions\Action;
+use Illuminate\Support\Facades\URL;
+use Skywalker\Support\Foundation\Action;
 
 class GenerateMagicLink extends Action
 {
     /**
-     * @param mixed ...$args [$identifier, $expiry]
-     * @return string
+     * @param  string  $identifier
+     * @param  int  $expiry
+     */
+    /**
+     * @param  mixed  ...$args  [string $identifier, int $expiry]
      */
     public function execute(...$args): string
     {

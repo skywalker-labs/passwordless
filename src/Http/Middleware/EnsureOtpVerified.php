@@ -7,15 +7,19 @@ namespace Skywalker\Otp\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Skywalker\Support\Security\ZeroTrust\TrustEngine;
 
 class EnsureOtpVerified
 {
+    protected TrustEngine $trustEngine;
+
+    public function __construct(TrustEngine $trustEngine)
+    {
+        $this->trustEngine = $trustEngine;
+    }
+
     /**
      * Handle an incoming request.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
-     * @return mixed
      */
     public function handle(Request $request, Closure $next): mixed
     {
@@ -24,13 +28,28 @@ class EnsureOtpVerified
             $user = Auth::user();
 
             // If user does not have OTP capability, skip
-            if ($user === null || !method_exists($user, 'sendOtp')) {
+            if ($user === null || ! method_exists($user, 'sendOtp')) {
                 return $next($request);
             }
 
-            // Check if OTP verification is bypassed or completed
-            if ($request->session()->get('otp_verified') === true) {
+            // Check trust score if enabled
+            $minTrust = config('passwordless.min_trust_score', 0.5);
+            $trustScore = $this->trustEngine->calculateScore($user);
+
+            // If trust score is very high (e.g., > 0.8), we might bypass OTP if configured
+            $bypassHighTrust = (bool) config('passwordless.bypass_high_trust', false);
+            if ($bypassHighTrust && $trustScore > 0.8) {
                 return $next($request);
+            }
+
+            // Check if OTP verification is completed in session
+            if ($request->session()->get('otp_verified') === true) {
+                // Even if verified, if trust score drops significantly, re-verify
+                if ($trustScore < $minTrust) {
+                    $request->session()->forget('otp_verified');
+                } else {
+                    return $next($request);
+                }
             }
 
             // Exclude OTP verify routes to prevent infinite loop

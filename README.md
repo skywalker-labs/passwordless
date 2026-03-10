@@ -1,13 +1,14 @@
 # Skywalker Passwordless — OTP & Magic Link Authentication
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/skywalker-labs/passwordless.svg?style=flat-square)](https://packagist.org/packages/skywalker-labs/passwordless)
+![Version](https://img.shields.io/github/v/release/skywalker-labs/passwordless?style=for-the-badge)
 [![Total Downloads](https://img.shields.io/packagist/dt/skywalker-labs/passwordless.svg?style=flat-square)](https://packagist.org/packages/skywalker-labs/passwordless)
 [![PHPStan Level 9](https://img.shields.io/badge/PHPStan-Level%209-brightgreen.svg?style=flat-square)](https://phpstan.org)
 [![PHP Version](https://img.shields.io/badge/php-%3E%3D8.2-blue.svg?style=flat-square)](https://www.php.net/)
 [![License](https://img.shields.io/packagist/l/skywalker-labs/passwordless.svg?style=flat-square)](LICENSE.md)
 [![Security Policy](https://img.shields.io/badge/security-policy-brightgreen.svg?style=flat-square)](SECURITY.md)
 
-Elegant **passwordless authentication** for Laravel. Drop-in OTP login, 2FA enforcement, magic links, and backup codes — all built on [Skywalker Toolkit](https://github.com/skywalker-labs/toolkit) with action-oriented architecture, contract-based design, and **PHPStan Level 9** compliance.
+Elegant **passwordless authentication** for Laravel. Drop-in OTP login, 2FA enforcement, magic links, and backup codes — all built on [Skywalker Toolkit](https://github.com/skywalker-labs/toolkit) with action-oriented architecture, contract-based design, and **Extreme Strictness (PHPStan Level 9 + Strict Rules)** compliance.
 
 ---
 
@@ -24,8 +25,9 @@ Elegant **passwordless authentication** for Laravel. Drop-in OTP login, 2FA enfo
 | **Middleware Gate** | `otp.verified` middleware with infinite-loop protection |
 | **Rate Limiting** | Built-in per-identifier request throttling on all routes |
 | **Action Architecture** | Each operation is a dedicated Action class (SRP) |
-| **PHPStan Level 9** | Zero static analysis errors across the entire codebase |
-| **Strict Types** | `declare(strict_types=1)` everywhere |
+| **Extreme Strictness** | 100% compliance with PHPStan Level 9 + Strict & Deprecation rules |
+| **Zero-Trust Auth** | Risk-based trust scoring (TrustEngine) integrated into the core flow |
+| **Strict Types** | `declare(strict_types=1)` and explicit type comparisons everywhere |
 
 ---
 
@@ -226,10 +228,10 @@ src/
 
 | Our Class | Extends |
 |---|---|
-| All 5 Action classes | `Skywalker\Support\Actions\Action` |
-| `OtpToken` | `Skywalker\Support\Data\ValueObject` |
+| All 5 Action classes | `Skywalker\Support\Foundation\Action` |
+| `OtpToken` | `Skywalker\Support\Foundation\ValueObject` |
 | `OtpException` | `Skywalker\Support\Exceptions\PackageException` |
-| `OtpService` | `Skywalker\Support\Services\BaseService` |
+| `OtpService` | `Skywalker\Support\Foundation\Service` |
 | `OtpServiceProvider` | `Skywalker\Support\Providers\PackageServiceProvider` |
 
 ---
@@ -254,12 +256,24 @@ composer format
 
 ## 🔒 Security & Quality
 
-- **PHPStan Level 9** — zero static analysis errors
+- **Extreme Strictness** — 100% compliance with PHPStan Level 9 + Strict & Deprecation rules
+- **Zero-Trust Security** — Integrated `TrustEngine` for risk-based analysis
 - **Hashed OTPs** — stored with `Hash::make()`, verified with `Hash::check()`
 - **Hashed Backup Codes** — same approach as OTPs
 - **Signed Magic Links** — protection against link tampering
-- **Rate Limiting** — 3 send / 5 verify attempts per minute per identifier
-- **Strict Types** — `declare(strict_types=1)` in all source files
+- **Rate Limiting** — strict per-identifier request throttling
+- **Strict Logic** — no implicit type coercion, only explicit boolean comparisons
+
+---
+
+## 🔒 Zero-Trust Security
+
+This package integrates the **Skywalker Trust Engine** to provide risk-based authentication:
+
+1.  **Trust Scoring**: Every authentication attempt calculates a "Trust Score" (0.0 to 1.0) based on IP, behavior, and environment.
+2.  **Adaptive 2FA**: If a user has a very high trust score (e.g. > 0.8), the `otp.verified` middleware can be configured to bypass the OTP check (`bypass_high_trust`).
+3.  **Hijack Protection**: If a session's trust score drops significantly mid-session, the user is automatically prompted for re-verification.
+4.  **Session Rotation**: Sessions are regenerated upon successful OTP or Magic Link verification to prevent fixation attacks.
 
 ---
 

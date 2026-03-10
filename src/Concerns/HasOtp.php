@@ -17,6 +17,7 @@ trait HasOtp
      * Send an OTP to the user.
      *
      * @return string The generated OTP.
+     *
      * @throws \RuntimeException
      */
     public function sendOtp(): string
@@ -27,7 +28,7 @@ trait HasOtp
         // Determine identifier (email or phone)
         $identifier = $this->email ?? $this->phone;
 
-        if (!$identifier) {
+        if (! $identifier) {
             throw new \RuntimeException('User must have an email or phone to receive OTP.');
         }
 
@@ -37,8 +38,6 @@ trait HasOtp
     /**
      * Verify an OTP for the user.
      *
-     * @param string $token
-     * @return bool
      * @throws InvalidOtpException
      */
     public function verifyOtp(string $token): bool
@@ -48,7 +47,7 @@ trait HasOtp
 
         $identifier = $this->email ?? $this->phone;
 
-        if (!$identifier) {
+        if (! $identifier) {
             throw new \RuntimeException('User must have an email or phone to verify OTP.');
         }
 

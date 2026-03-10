@@ -28,9 +28,6 @@ class OtpGenerated
 
     /**
      * Create a new event instance.
-     *
-     * @param string $identifier
-     * @param string $otp
      */
     public function __construct(string $identifier, string $otp)
     {

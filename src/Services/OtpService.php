@@ -4,25 +4,27 @@ declare(strict_types=1);
 
 namespace Skywalker\Otp\Services;
 
-use Skywalker\Otp\Domain\Contracts\OtpService as OtpServiceContract;
-use Skywalker\Otp\Exceptions\InvalidOtpException;
-use Skywalker\Support\Services\BaseService;
-
-use Skywalker\Otp\Domain\Contracts\OtpStore;
-use Skywalker\Otp\Domain\Contracts\OtpSender;
-
-use Skywalker\Otp\Actions\GenerateOtp;
-use Skywalker\Otp\Actions\VerifyOtp;
 use Skywalker\Otp\Actions\GenerateBackupCodes;
-use Skywalker\Otp\Actions\VerifyBackupCode;
 use Skywalker\Otp\Actions\GenerateMagicLink;
+use Skywalker\Otp\Actions\GenerateOtp;
+use Skywalker\Otp\Actions\VerifyBackupCode;
+use Skywalker\Otp\Actions\VerifyOtp;
+use Skywalker\Otp\Domain\Contracts\OtpSender;
+use Skywalker\Otp\Domain\Contracts\OtpService as OtpServiceContract;
+use Skywalker\Otp\Domain\Contracts\OtpStore;
+use Skywalker\Otp\Exceptions\InvalidOtpException;
+use Skywalker\Support\Foundation\Service;
 
-class OtpService extends BaseService implements OtpServiceContract
+class OtpService extends Service implements OtpServiceContract
 {
     protected int $length;
+
     protected int $expiry;
+
     protected string $channel;
+
     protected OtpStore $store;
+
     protected OtpSender $sender;
 
     /**
@@ -49,15 +51,19 @@ class OtpService extends BaseService implements OtpServiceContract
 
     public function generate(string $identifier): string
     {
-        $action = new GenerateOtp();
-        return $action->execute($this->store, $this->sender, $identifier, $this->length, $this->expiry, $this->channel, static::$generator);
+        return (new GenerateOtp($this->store, $this->sender))->execute(
+            $identifier,
+            $this->length,
+            $this->expiry,
+            $this->channel,
+            static::$generator
+        );
     }
 
     /**
      * Set a custom OTP generator.
      *
-     * @param (\Closure(): string) $callback
-     * @return void
+     * @param  (\Closure(): string)  $callback
      */
     public static function useGenerator(\Closure $callback): void
     {
@@ -67,52 +73,36 @@ class OtpService extends BaseService implements OtpServiceContract
     /**
      * Verify the OTP token.
      *
-     * @param string $identifier
-     * @param string $token
-     * @return bool
      * @throws InvalidOtpException
      */
     public function verify(string $identifier, string $token): bool
     {
-        $action = new VerifyOtp();
-        return $action->execute($this->store, $identifier, $token);
+        return (new VerifyOtp($this->store))->execute($identifier, $token);
     }
 
     /**
      * Generate a set of backup codes for the user.
      *
-     * @param string $identifier
-     * @param int $quantity
      * @return array<int, string>
      */
     public function generateBackupCodes(string $identifier, int $quantity = 8): array
     {
-        $action = new GenerateBackupCodes();
-        return $action->execute($identifier, $quantity);
+        return (new GenerateBackupCodes)->execute($identifier, $quantity);
     }
 
     /**
      * Verify and consume a backup code.
-     *
-     * @param string $identifier
-     * @param string $code
-     * @return bool
      */
     public function verifyBackupCode(string $identifier, string $code): bool
     {
-        $action = new VerifyBackupCode();
-        return $action->execute($identifier, $code);
+        return (new VerifyBackupCode)->execute($identifier, $code);
     }
 
     /**
      * Generate a Magic Login Link.
-     *
-     * @param string $identifier
-     * @return string
      */
     public function generateMagicLink(string $identifier): string
     {
-        $action = new GenerateMagicLink();
-        return $action->execute($identifier, $this->expiry);
+        return (new GenerateMagicLink)->execute($identifier, $this->expiry);
     }
 }

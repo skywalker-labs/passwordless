@@ -33,14 +33,14 @@
         },
         {
             "name": "Mradul Sharma",
-            "email": "skywalkerlknw@gmail.com",
+            "email": "ermradulsharma0@gmail.com",
             "homepage": "https://mradulsharma.vercel.app/",
             "role": "Lead Developer"
         }
     ],
     "require": {
         "php": "^8.2",
-        "skywalker-labs/toolkit": "^1.0"
+        "skywalker-labs/toolkit": "^1.6.0"
     },
     "require-dev": {
         "orchestra/testbench": "^9.0",
@@ -49,7 +49,9 @@
         "larastan/larastan": "^3.9",
         "phpstan/phpstan-phpunit": "^2.0",
         "infection/infection": "^0.32",
-        "laravel/pint": "^1.13"
+        "laravel/pint": "^1.13",
+        "phpstan/phpstan-strict-rules": "^2.0",
+        "phpstan/phpstan-deprecation-rules": "^2.0"
     },
     "autoload": {
         "psr-4": {

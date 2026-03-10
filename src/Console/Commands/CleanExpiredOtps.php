@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace Skywalker\Otp\Console\Commands;
 
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 class CleanExpiredOtps extends Command
 {
-
     /**
      * The name and signature of the console command.
      *
@@ -36,6 +35,7 @@ class CleanExpiredOtps extends Command
 
         if ($driver !== 'database') {
             $this->error('OTP driver is not set to database. Cleaning skipped.');
+
             return 0;
         }
 
@@ -45,7 +45,7 @@ class CleanExpiredOtps extends Command
 
         $this->info("Deleted {$count} expired OTPs.");
 
-        Log::info("Cleaned expired OTPs", ['count' => $count]);
+        Log::info('Cleaned expired OTPs', ['count' => $count]);
 
         return 0;
     }

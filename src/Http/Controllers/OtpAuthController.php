@@ -7,27 +7,53 @@ namespace Skywalker\Otp\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
-use Skywalker\Otp\Domain\Contracts\OtpService as OtpServiceContract;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Validator;
+use Skywalker\Otp\Domain\Contracts\OtpService as OtpServiceContract;
 use Skywalker\Otp\Events\OtpVerified;
-use Skywalker\Support\Http\Concerns\ApiResponse;
+use Skywalker\Support\Security\ZeroTrust\TrustEngine;
 
 class OtpAuthController extends Controller
 {
-    use ApiResponse;
+    /**
+     * @param  mixed  $data
+     */
+    protected function apiSuccess($data = null, string $message = 'Success', int $status = 200): \Illuminate\Http\JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'data' => $data,
+        ], $status);
+    }
+
+    /**
+     * @param  mixed  $errors
+     */
+    protected function apiError(string $message = 'Error', int $status = 400, $errors = null): \Illuminate\Http\JsonResponse
+    {
+        return response()->json([
+            'success' => false,
+            'message' => $message,
+            'errors' => $errors,
+        ], $status);
+    }
 
     protected OtpServiceContract $otpService;
 
-    public function __construct(OtpServiceContract $otpService)
+    protected TrustEngine $trustEngine;
+
+    public function __construct(OtpServiceContract $otpService, TrustEngine $trustEngine)
     {
         $this->otpService = $otpService;
+        $this->trustEngine = $trustEngine;
     }
 
     public function sendOtp(Request $request): \Illuminate\Http\JsonResponse
     {
-        $request->validate([
-            'identifier' => 'required|string', // validate email or phone
-        ]);
+        Validator::make($request->all(), [
+            'identifier' => 'required|string',
+        ])->validate();
 
         $identifierInput = $request->input('identifier', '');
         $identifier = is_string($identifierInput) ? $identifierInput : '';
@@ -38,29 +64,33 @@ class OtpAuthController extends Controller
 
         // Check if user exists
         $user = $userModel::where('email', $identifier)
-            ->orWhere('phone', $identifier) // Assuming phone column exists if using phone
+            ->orWhere('phone', $identifier)
             ->first();
 
-        if (!$user) {
-            return response()->json(['message' => 'User not found.'], 404);
-        }
-
-        if (!$identifier) {
-            return $this->apiError('User identifier not found.', 400);
-        }
-
-        $key = 'otp-send:' . $identifier;
+        $key = 'otp-send:'.$identifier;
 
         if (RateLimiter::tooManyAttempts($key, 3)) {
             $seconds = RateLimiter::availableIn($key);
+
             return $this->apiError("Too many OTP requests. Please try again in {$seconds} seconds.", 429);
         }
 
-        RateLimiter::hit($key, 60); // 3 attempts per minute
+        RateLimiter::hit($key, 60);
+
+        if ($user === null) {
+            // Return generic success to prevent user enumeration
+            return $this->apiSuccess(null, 'If an account exists, an OTP has been sent.');
+        }
+
+        $trustScore = $this->trustEngine->calculateScore($user);
 
         try {
             $otp = $this->otpService->generate($identifier);
-            return $this->apiSuccess(null, 'OTP sent successfully.');
+
+            // Store trust score in session for verification phase
+            $request->session()->put('otp_trust_score', $trustScore);
+
+            return $this->apiSuccess(['trust_score' => $trustScore], 'OTP sent successfully.');
         } catch (\Skywalker\Otp\Exceptions\OtpDeliveryFailedException $e) {
             return $this->apiError($e->getMessage(), 500);
         }
@@ -70,24 +100,26 @@ class OtpAuthController extends Controller
     {
         /** @var view-string $view */
         $view = 'passwordless::otp-verify';
+
         return view($view);
     }
 
     public function verifyOtpSubmit(Request $request): \Illuminate\Http\RedirectResponse
     {
-        $request->validate([
+        Validator::make($request->all(), [
             'otp' => 'required|string',
-        ]);
+        ])->validate();
 
         $user = Auth::user();
 
-        if (!$user) {
+        if ($user === null) {
             return redirect()->route('login');
         }
 
         // Use the trait's verify method which resolves identifier
-        if (method_exists($user, 'verifyOtp') && $user->verifyOtp($request->input('otp'))) {
+        if (method_exists($user, 'verifyOtp') && $user->verifyOtp($request->input('otp')) === true) {
             $request->session()->put('otp_verified', true);
+
             return redirect()->intended('/'); // Redirect to intended page or home
         }
 
@@ -98,27 +130,29 @@ class OtpAuthController extends Controller
     {
         $user = Auth::user();
 
-        if ($user && method_exists($user, 'sendOtp')) {
+        if ($user !== null && method_exists($user, 'sendOtp')) {
             $user->sendOtp();
 
             if ($request->wantsJson()) {
                 return $this->apiSuccess(null, 'OTP Resent successfully.');
             }
+
             return back()->with('success', 'OTP Resent successfully.');
         }
 
         if ($request->wantsJson()) {
             return $this->apiError('Unable to resend OTP.', 400);
         }
+
         return back()->with('error', 'Unable to resend OTP.');
     }
 
     public function verifyOtp(Request $request): \Illuminate\Http\JsonResponse
     {
-        $request->validate([
+        Validator::make($request->all(), [
             'identifier' => 'required|string',
             'otp' => 'required|string',
-        ]);
+        ])->validate();
 
         $identifierInput = $request->input('identifier', '');
         $identifier = is_string($identifierInput) ? $identifierInput : '';
@@ -126,10 +160,11 @@ class OtpAuthController extends Controller
         $tokenInput = $request->input('otp', '');
         $token = is_string($tokenInput) ? $tokenInput : '';
 
-        $key = 'otp-verify:' . $identifier;
+        $key = 'otp-verify:'.$identifier;
 
         if (RateLimiter::tooManyAttempts($key, 5)) {
             $seconds = RateLimiter::availableIn($key);
+
             return $this->apiError("Too many verification attempts. Please try again in {$seconds} seconds.", 429);
         }
 
@@ -146,12 +181,23 @@ class OtpAuthController extends Controller
                     ->first();
 
                 if ($user instanceof \Illuminate\Contracts\Auth\Authenticatable) {
+                    $trustScore = $this->trustEngine->calculateScore($user);
+
                     event(new OtpVerified($user, $request));
-                    return $this->apiSuccess(['user' => $user], 'OTP verified successfully.');
+
+                    $request->session()->regenerate(); // Prevent session fixation
+                    $request->session()->put('otp_verified', true);
+                    $request->session()->put('otp_trust_score', $trustScore);
+
+                    return $this->apiSuccess([
+                        'user' => $user,
+                        'trust_score' => $trustScore,
+                    ], 'OTP verified successfully.');
                 }
             }
         } catch (\Skywalker\Otp\Exceptions\InvalidOtpException $e) {
             RateLimiter::hit($key, 60); // 5 attempts per minute
+
             return $this->apiError($e->getMessage(), 401);
         }
 
@@ -160,12 +206,20 @@ class OtpAuthController extends Controller
 
     public function loginMagic(Request $request): \Illuminate\Http\RedirectResponse
     {
-        if (!$request->hasValidSignature()) {
+        if (\Illuminate\Support\Facades\URL::hasValidSignature($request) === false) {
             abort(401, 'Invalid or expired magic link.');
         }
 
         $identifierInput = $request->identifier ?? '';
         $identifier = is_string($identifierInput) ? $identifierInput : '';
+
+        $key = 'otp-magic:'.$identifier;
+
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            return redirect()->route('login')->with('error', 'Too many login attempts. Please try again later.');
+        }
+
+        RateLimiter::hit($key, 300); // 5 attempts per 5 minutes
 
         $userModelConfig = config('auth.providers.users.model', 'App\\Models\\User');
         /** @var class-string<\Illuminate\Database\Eloquent\Model> $userModel */
@@ -176,8 +230,15 @@ class OtpAuthController extends Controller
             ->first();
 
         if ($user instanceof \Illuminate\Contracts\Auth\Authenticatable) {
+            RateLimiter::clear($key);
+            $trustScore = $this->trustEngine->calculateScore($user);
+
             event(new OtpVerified($user, $request));
+
+            $request->session()->regenerate(); // Prevent session fixation
             $request->session()->put('otp_verified', true);
+            $request->session()->put('otp_trust_score', $trustScore);
+
             return redirect()->intended('/');
         }
 

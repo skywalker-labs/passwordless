@@ -6,6 +6,29 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## v2.1.0 — 2026-03-10
+
+### 🛡️ Security & Hardening (Elite Standards)
+- **Zero-Trust Integration**: Integrated `TrustEngine` for risk-based authentication. Trust scores are now calculated and stored in sessions to enable adaptive 2FA bypass and hijack protection.
+- **Extreme Strictness**: Achieved 100% compliance with `phpstan-strict-rules` and `phpstan-deprecation-rules`.
+- **User Enumeration Defense**: `OtpAuthController` now returns generic success responses for OTP generation, preventing attackers from identifying valid users.
+- **Magic Link Throttling**: Added a dedicated rate limiter for magic link login (5 attempts per 5 minutes) to protect signed URLs.
+- **Strict Logic**: Replaced all implicit boolean/truthiness checks with explicit, type-safe comparisons across the entire codebase.
+
+### 🏗️ Architecture
+- **Toolkit Foundation Upgrade**: Fully migrated all core components to the latest `skywalker-labs/toolkit` foundation:
+  - Actions now extend `Skywalker\Support\Foundation\Action`.
+  - Service extends `Skywalker\Support\Foundation\Service`.
+  - ValueObject extends `Skywalker\Support\Foundation\ValueObject`.
+- **Modern Validation**: Migrated all validation logic from the deprecated `Rule` interface to the modern `ValidationRule` contract.
+- **Optimized Persistence**: `DatabaseOtpStore` and `CacheOtpStore` refactored for explicit null-safety and strict-typing.
+
+### 🔧 Changed
+- **Cleaner Imports**: Performed a global import optimization and formatting sweep via Laravel Pint.
+- **Removal of Clutter**: Cleaned up all temporary analysis reports and legacy scripts from the root directory.
+
+---
+
 ## v2.0.0 — 2026-03-09
 
 ### 💥 Breaking Changes

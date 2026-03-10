@@ -29,9 +29,6 @@ class OtpFailed
 
     /**
      * Create a new event instance.
-     *
-     * @param string $identifier
-     * @param OtpException $exception
      */
     public function __construct(string $identifier, OtpException $exception)
     {

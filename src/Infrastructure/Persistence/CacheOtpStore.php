@@ -11,7 +11,7 @@ use Skywalker\Otp\Domain\ValueObjects\OtpToken;
 class CacheOtpStore implements OtpStore
 {
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function store(OtpToken $token): void
     {
@@ -23,7 +23,7 @@ class CacheOtpStore implements OtpStore
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function get(string $identifier): ?OtpToken
     {
@@ -33,7 +33,7 @@ class CacheOtpStore implements OtpStore
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function delete(string $identifier): void
     {
@@ -42,12 +42,9 @@ class CacheOtpStore implements OtpStore
 
     /**
      * Get the cache key for the identifier.
-     *
-     * @param string $identifier
-     * @return string
      */
     protected function getCacheKey(string $identifier): string
     {
-        return 'otp_' . $identifier;
+        return 'otp_'.$identifier;
     }
 }

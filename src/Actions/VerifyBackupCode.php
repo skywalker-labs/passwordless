@@ -7,23 +7,25 @@ namespace Skywalker\Otp\Actions;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Skywalker\Support\Actions\Action;
+use Skywalker\Support\Foundation\Action;
 
 class VerifyBackupCode extends Action
 {
     /**
-     * @param mixed ...$args [$identifier, $code]
-     * @return bool
+     * @param  string  $identifier
+     * @param  string  $code
+     */
+    /**
+     * @param  mixed  ...$args  [string $identifier, string $code]
      */
     public function execute(...$args): bool
     {
         $identifier = $args[0] ?? throw new \InvalidArgumentException('Identifier is required.');
-        $code       = $args[1] ?? throw new \InvalidArgumentException('Code is required.');
+        $code = $args[1] ?? throw new \InvalidArgumentException('Code is required.');
 
         assert(is_string($identifier));
         assert(is_string($code));
-
-        /** @var array<int, object{id: int, identifier: string, code: string, used_at: string|null}> $records */
+        /** @var array<int, \stdClass> $records */
         $records = DB::table('otp_backup_codes')
             ->where('identifier', $identifier)
             ->whereNull('used_at')

@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Skywalker\Otp\Infrastructure\Delivery;
 
+use Exception;
+use Illuminate\Support\Facades\Notification;
 use Skywalker\Otp\Domain\Contracts\OtpSender;
 use Skywalker\Otp\Exceptions\OtpDeliveryFailedException;
 use Skywalker\Otp\Notifications\OtpNotification;
-use Illuminate\Support\Facades\Notification;
-use Exception;
 
 class NotificationSender implements OtpSender
 {
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function send(string $identifier, string $token, string $channel): void
     {
@@ -35,9 +35,6 @@ class NotificationSender implements OtpSender
 
     /**
      * Resolve the notification route key based on channel.
-     *
-     * @param string $channel
-     * @return string
      */
     protected function resolveRouteKey(string $channel): string
     {
