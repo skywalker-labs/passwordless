@@ -1,6 +1,5 @@
 # Skywalker Passwordless — OTP & Magic Link Authentication
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/skywalker-labs/passwordless.svg?style=for-the-badge)](https://packagist.org/packages/skywalker-labs/passwordless)
 ![Version](https://img.shields.io/github/v/release/skywalker-labs/passwordless?style=for-the-badge)
 [![Total Downloads](https://img.shields.io/packagist/dt/skywalker-labs/passwordless.svg?style=for-the-badge)](https://packagist.org/packages/skywalker-labs/passwordless)
 [![PHPStan Level 9](https://img.shields.io/badge/PHPStan-Level%209-brightgreen.svg?style=for-the-badge)](https://phpstan.org)
