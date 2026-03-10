@@ -19,6 +19,12 @@ class OtpTest extends TestCase
         $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
     }
 
+    protected function tearDown(): void
+    {
+        OtpService::useGenerator(null);
+        parent::tearDown();
+    }
+
     public function test_can_generate_otp()
     {
         $service = app('otp');

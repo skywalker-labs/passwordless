@@ -63,9 +63,9 @@ class OtpService extends Service implements OtpServiceContract
     /**
      * Set a custom OTP generator.
      *
-     * @param  (\Closure(): string)  $callback
+     * @param  (\Closure(): string)|null  $callback
      */
-    public static function useGenerator(\Closure $callback): void
+    public static function useGenerator(?\Closure $callback): void
     {
         static::$generator = $callback;
     }
